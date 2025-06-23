@@ -1,0 +1,180 @@
+// This is the Prisma Schema for the Cognify application.
+// It defines the data models, their fields, and their relationships.
+// This file is the single source of truth for the database structure.
+
+// Part 1: Generator Block
+// Configures what Prisma generates from this schema. In this case, it generates
+// the type-safe Prisma Client for our Next.js application.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Part 2: Datasource Block
+// Specifies the connection details for our database.
+datasource db {
+  // We're using a PostgreSQL database.
+  provider = "postgresql"
+  
+  // The connection URL is loaded from the .env file for security.
+  url      = env("DATABASE_URL")
+}
+
+// Part 3: Data Model Definitions
+// Each model maps to a table in the PostgreSQL database.
+
+//========================================================================
+// User Model: The core entity representing a user. (MERGED AND CORRECTED)
+//========================================================================
+model User {
+  // Fields (Columns in the 'users' table)
+  id             String    @id @default(cuid())
+  name           String?
+  email          String?   @unique
+  hashedPassword String?   // This is required for password-based login
+  emailVerified  DateTime?
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relational fields (for navigating relationships in code)
+  courses        Course[]
+  accounts       Account[]
+  sessions       Session[]
+  notes          Note[]
+  mindMaps       MindMap[]
+  studyPlans     StudyPlan[]
+}
+
+//========================================================
+// Course Model: An academic course a user is studying.
+//========================================================
+model Course {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Foreign key for the one-to-many relationship with User
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A course can have many documents
+  documents     Document[]
+}
+
+//========================================================================
+// Document Model: Represents uploaded files (PDFs, links, etc.).
+//========================================================================
+model Document {
+  id            String    @id @default(cuid())
+  name          String    // e.g., "Chapter 3 - The Cell.pdf"
+  fileType      String    // e.g., "PDF", "YOUTUBE_URL"
+  url           String    // URL to the file in a blob store like S3 or Vercel Blob
+  status        String    @default("PENDING") // PENDING, PROCESSING, FAILED, COMPLETED
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Foreign key for the relationship with Course
+  courseId      String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+//========================================================
+// Note Model: For user-created notes.
+//========================================================
+model Note {
+  id            String    @id @default(cuid())
+  title         String
+  content       String    @db.Text // Use @db.Text for potentially long content
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Foreign key for the relationship with User
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+//========================================================
+// MindMap Model: For storing mind map data.
+//========================================================
+model MindMap {
+  id            String    @id @default(cuid())
+  title         String
+  data          Json      // Store the mind map structure as a JSON object
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Foreign key for the relationship with User
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+//========================================================
+// StudyPlan Model: Represents an AI-generated study plan.
+//========================================================
+model StudyPlan {
+  id            String   @id @default(cuid())
+  title         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Foreign key for the relationship with User
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // A plan consists of many tasks
+  tasks         StudyTask[]
+}
+
+model StudyTask {
+  id            String      @id @default(cuid())
+  title         String
+  description   String?
+  status        String      @default("TODO") // TODO, IN_PROGRESS, DONE
+  scheduledFor  DateTime?
+  durationMins  Int?        // Estimated duration in minutes
+  
+  // Foreign key for the relationship with StudyPlan
+  planId        String
+  plan          StudyPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+//========================================================================
+// NextAuth.js Required Models: Do not modify unless necessary.
+// These handle authentication and session management.
+//========================================================================
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
