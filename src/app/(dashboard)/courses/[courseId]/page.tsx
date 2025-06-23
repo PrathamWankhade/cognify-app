@@ -6,15 +6,15 @@ import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import FileUpload from "@/components/dashboard/FileUpload";
 
-// THIS IS THE FIX: We define the shape of the component's props here.
-// This tells TypeScript exactly what to expect.
+// THIS IS THE CORRECTED TYPE DEFINITION
+// It includes both `params` (for dynamic routes) and `searchParams` (for URL query strings),
+// which fully satisfies Next.js's internal PageProps constraint.
 type Props = {
-  params: {
-    courseId: string;
-  };
+  params: { courseId: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
-// And now we use our 'Props' type for the function's arguments.
+// The function signature remains the same as we are only using params here.
 export default async function CourseDetailPage({ params }: Props) {
   const session = await getServerSession(authOptions);
 
