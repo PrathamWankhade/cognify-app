@@ -46,11 +46,13 @@ export default function FileUpload({ courseId }: { courseId: string }) {
       }
       router.refresh();
 
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsUploading(false);
-    }
+    } catch (err: unknown) { 
+  if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError('An unknown error occurred');
+  }
+}
   };
 
   return (

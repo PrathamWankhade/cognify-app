@@ -45,7 +45,7 @@ export default function CreateCourseDialog() {
       // This is a powerful way to update server components without a full page reload.
       router.refresh();
 
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);

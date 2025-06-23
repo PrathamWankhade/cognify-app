@@ -33,9 +33,10 @@ export default function LoginForm() {
         // Successful sign-in, redirect to dashboard
         router.push("/dashboard");
       }
-    } catch (error) {
-      setError("An unexpected error occurred.");
-    }
+    } catch (_error) { // <-- Change 'error' to '_error'
+  console.error("Sign-in error", _error);
+  setError("An unexpected error occurred. Please try again.");
+}
   };
 
   return (
