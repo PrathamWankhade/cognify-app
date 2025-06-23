@@ -6,8 +6,16 @@ import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import FileUpload from "@/components/dashboard/FileUpload";
 
-// This is an async Server Component that receives params from the URL
-export default async function CourseDetailPage({ params }: { params: { courseId: string } }) {
+// THIS IS THE FIX: We define the shape of the component's props here.
+// This tells TypeScript exactly what to expect.
+type Props = {
+  params: {
+    courseId: string;
+  };
+};
+
+// And now we use our 'Props' type for the function's arguments.
+export default async function CourseDetailPage({ params }: Props) {
   const session = await getServerSession(authOptions);
 
   // 1. Fetch the specific course and its documents
