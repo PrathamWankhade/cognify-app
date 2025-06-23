@@ -1,4 +1,4 @@
-// cognify/src/components/dashboard/CreateCourseDialog.tsx
+// src/components/dashboard/CreateCourseDialog.tsx
 "use client";
 
 import { useState } from "react";
@@ -10,12 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function CreateCourseDialog() {
-  // State to control if the dialog is open or closed
   const [open, setOpen] = useState(false);
-  // State for the form fields
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  // State for handling errors and loading state
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -37,15 +34,13 @@ export default function CreateCourseDialog() {
         throw new Error("Failed to create the course. Server responded with an error.");
       }
       
-      setOpen(false); // Close the dialog on success
-      setTitle(""); // Reset form fields
+      setOpen(false);
+      setTitle("");
       setDescription("");
-      
-      // router.refresh() tells Next.js to re-fetch the data for the current page (our course list).
-      // This is a powerful way to update server components without a full page reload.
       router.refresh();
 
-    } catch (_err) {
+    } catch (err) {
+      console.error("Course creation failed:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -61,7 +56,8 @@ export default function CreateCourseDialog() {
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Create a New Course</DialogTitle>
-            <DialogDescription>Fill in the details for your new course below. Click create when you're done.</DialogDescription>
+            {/* THIS IS THE CORRECTED LINE */}
+            <DialogDescription>Fill in the details for your new course below. Click create when you have done.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">

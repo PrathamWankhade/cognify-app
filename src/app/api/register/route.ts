@@ -34,6 +34,8 @@ export async function POST(request: Request) {
     });
 
     // Don't return the password hash in the response
+    // THIS IS THE FIX: The comment below disables the linting rule for the next line only.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { hashedPassword: _, ...userWithoutPassword } = user;
 
     return NextResponse.json(userWithoutPassword);

@@ -33,10 +33,10 @@ export default function LoginForm() {
         // Successful sign-in, redirect to dashboard
         router.push("/dashboard");
       }
-    } catch (_error) { // <-- Change 'error' to '_error'
-  console.error("Sign-in error", _error);
-  setError("An unexpected error occurred. Please try again.");
-}
+    } catch (_error) {
+      console.error("Sign-in error", _error);
+      setError("An unexpected error occurred. Please try again.");
+    }
   };
 
   return (
@@ -59,7 +59,8 @@ export default function LoginForm() {
           <Button type="submit" className="w-full">Sign in</Button>
         </form>
         <div className="mt-4 text-center text-sm">
-          Don't have an account?{" "}
+          {/* THIS IS THE CORRECTED LINE */}
+          Do not have an account?{" "}
           <Link href="/register" className="underline">Sign up</Link>
         </div>
       </CardContent>

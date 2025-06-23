@@ -13,8 +13,6 @@ export default async function CoursesPage() {
   const session = await getServerSession(authOptions);
   
   // 2. Fetch the courses for ONLY the logged-in user from the database.
-  // The '!' tells TypeScript we are certain the session and user.id exist because
-  // this route is protected by our middleware.
   const courses = await prisma.course.findMany({
     where: {
       userId: session!.user.id,
@@ -37,7 +35,8 @@ export default async function CoursesPage() {
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 p-12 text-center">
           <h3 className="text-xl font-semibold">No Courses Found</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Click "Create New Course" to get started.
+            {/* THIS IS THE FINAL, CORRECTED LINE - ALL QUOTES REMOVED */}
+            Click Create New Course to get started.
           </p>
         </div>
       ) : (
