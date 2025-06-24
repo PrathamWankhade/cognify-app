@@ -1,4 +1,4 @@
-// src/app/api/upload/route.ts
+// cognify/src/app/api/upload/route.ts
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -6,55 +6,79 @@ import { authOptions } from '../auth/[...nextauth]/route';
 import prisma from '@/lib/db';
 
 export async function POST(request: Request): Promise<NextResponse> {
-  // First, authenticate the user. This is a secure endpoint.
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
-  // 1. Get filename and courseId from the URL's search parameters.
   const { searchParams } = new URL(request.url);
   const filename = searchParams.get('filename');
   const courseId = searchParams.get('courseId');
 
-  // Validate that we have the necessary parameters.
   if (!filename || !courseId) {
-    return new NextResponse('Filename and courseId query parameters are required', { status: 400 });
+    return new NextResponse('Filename and courseId are required', { status: 400 });
   }
+  
+  const fileType = filename.split('.').pop()?.toUpperCase() ?? 'UNKNOWN';
 
-  // 2. Create a preliminary record in our database.
-  // This gives us a document ID before we even start the upload.
   const document = await prisma.document.create({
     data: {
       name: filename,
       courseId: courseId,
-      status: 'UPLOADING', // The initial status of the document.
-      fileType: filename.split('.').pop()?.toUpperCase() ?? 'UNKNOWN',
-      url: '', // The URL will be empty until the upload is complete.
+      status: 'UPLOADING',
+      fileType: fileType,
+      url: '',
     }
   });
 
-  // 3. Upload the file stream from the request body to Vercel Blob.
-  // The 'request.body!' is the raw file data sent from the frontend.
-  // The second argument to `put` is the body, the third is the options.
   const blob = await put(filename, request.body!, {
     access: 'public',
-    // The 'metadata' property is not supported here in this version.
-    // It is now handled automatically via 'x-metadata-*' headers from the client.
+    metadata: {
+      documentId: document.id,
+      userId: session.user.id,
+      courseId: courseId,
+    }
   });
 
-  // 4. Once the upload is successful, update our database record.
-  // We now have the final URL from Vercel Blob.
+  // Update our database record with the final URL
   await prisma.document.update({
     where: { id: document.id },
     data: {
       url: blob.url,
-      status: 'PENDING_PROCESSING', // The new status, ready for our AI.
+      status: 'PENDING_PROCESSING',
     }
   });
 
-  // TODO: In the next phase, we will trigger the AI worker from here.
+  // V V V --- ADD THIS NEW SECTION --- V V V
+  // Trigger the AI Worker to process the document in the background
+  try {
+    const aiWorkerUrl = process.env.AI_WORKER_URL; // Get URL from environment variable
+    if (!aiWorkerUrl) {
+      console.warn("AI_WORKER_URL not set. Document will not be processed by AI.");
+      // You might want to set status to 'PROCESSING_SKIPPED' if worker is optional
+    } else {
+      await fetch(`${aiWorkerUrl}/process-document`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentId: document.id,
+          documentUrl: blob.url,
+          userId: session.user.id,
+          courseId: courseId,
+          fileType: fileType,
+        }),
+      });
+      console.log(`Successfully sent document ${document.id} to AI worker.`);
+    }
+  } catch (workerError) {
+    console.error("Failed to call AI worker:", workerError);
+    // Update document status to indicate worker call failed if critical
+    await prisma.document.update({
+      where: { id: document.id },
+      data: { status: 'WORKER_CALL_FAILED' },
+    });
+  }
+  // ^ ^ ^ --- END OF NEW SECTION --- ^ ^ ^
 
-  // 5. Return the successful blob information to the client.
   return NextResponse.json(blob);
 }

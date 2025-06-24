@@ -1,0 +1,11 @@
+# cognify/apps/ai-worker/requirements.txt
+fastapi
+uvicorn
+python-multipart # For file uploads if we switch to direct upload, good to have
+pypdf # For PDF text extraction
+langchain # For AI orchestration
+openai # For LLM calls and embeddings (or google-generativeai for Gemini)
+pinecone-client # Or weaviate-client, chromadb etc.
+psycopg2-binary # PostgreSQL driver
+sqlalchemy # ORM for PostgreSQL (or use direct psycopg2)
+python-dotenv # For loading environment variables

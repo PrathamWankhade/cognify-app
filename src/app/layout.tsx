@@ -1,14 +1,14 @@
-// src/app/layout.tsx
+// cognify/src/app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "@/components/AuthProvider"; // 1. Import the provider
+import AuthProvider from "@/components/AuthProvider"; // Ensure this import is correct
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cognify",
-  description: "Your smart study assistant",
+  title: "Cognify - Your Smart Study Assistant",
+  description: "AI-powered personalized study assistance and planning.",
 };
 
 export default function RootLayout({
@@ -19,7 +19,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {/* 2. Wrap the application with the AuthProvider */}
         <AuthProvider>
           {children}
         </AuthProvider>
