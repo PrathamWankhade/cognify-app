@@ -6,23 +6,24 @@ import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import FileUpload from "@/components/dashboard/FileUpload";
 
-// THIS IS THE CORRECTED TYPE DEFINITION
-// It includes both `params` (for dynamic routes) and `searchParams` (for URL query strings),
-// which fully satisfies Next.js's internal PageProps constraint.
-type Props = {
+// Step 1: Define the complete, official props type for a Next.js Page.
+type PageProps = {
   params: { courseId: string };
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
-// The function signature remains the same as we are only using params here.
-export default async function CourseDetailPage({ params }: Props) {
+// Step 2: Accept the entire 'props' object with the 'PageProps' type.
+// We will NOT destructure { params } here.
+export default async function CourseDetailPage(props: PageProps) {
+  // Step 3: Destructure 'params' from the props object right here.
+  // This is the key change in our approach.
+  const { params } = props;
+
   const session = await getServerSession(authOptions);
 
-  // 1. Fetch the specific course and its documents
   const course = await prisma.course.findUnique({
     where: {
       id: params.courseId,
-      // Security check: ensure the course belongs to the logged-in user
       userId: session!.user.id,
     },
     include: {
@@ -34,7 +35,6 @@ export default async function CourseDetailPage({ params }: Props) {
     },
   });
 
-  // 2. If no course is found (or doesn't belong to the user), show a 404 page
   if (!course) {
     notFound();
   }
@@ -48,13 +48,11 @@ export default async function CourseDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Section for Uploading Files */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Upload Content</h2>
         <FileUpload courseId={course.id} />
       </div>
 
-      {/* Section for Displaying Uploaded Documents */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Course Documents</h2>
         {course.documents.length === 0 ? (
